@@ -2,6 +2,10 @@ defmodule ExBanking.Users do
   use GenServer
   alias ExBanking.Accounts
 
+  # # # # # # # #
+  #  Client API #
+  # # # # # # # #
+
   def start_link(username) do
     GenServer.start_link(__MODULE__, [], name: via(username))
   end
@@ -18,6 +22,10 @@ defmodule ExBanking.Users do
     GenServer.call(via(username), {:withdraw, amount, currency})
   end
 
+  # # # # # # #
+  #  Callback #
+  # # # # # # #
+
   @impl true
   def init(init_arg) do
     {:ok, init_arg}
@@ -32,7 +40,7 @@ defmodule ExBanking.Users do
   @impl true
   def handle_call({:deposit, amount, currency}, _from, accounts) do
     {new_balance, new_accounts} = Accounts.deposit(accounts, amount, currency)
-    {:reply, new_balance, new_accounts}
+    {:reply, {:ok, new_balance}, new_accounts}
   end
 
   @impl true
@@ -45,6 +53,10 @@ defmodule ExBanking.Users do
         {:reply, {:error, error}, accounts}
     end
   end
+
+  # # # # # # #
+  #  Helpers  #
+  # # # # # # #
 
   # def whereis_name(username) do
   #   Registry.whereis_name(via(username))

@@ -21,8 +21,7 @@ defmodule ExBanking do
           | {:error, :wrong_arguments | :user_does_not_exist | :too_many_requests_to_user}
   def deposit(user, amount, currency)
       when is_binary(user) and amount >= 0 and is_binary(currency) do
-    new_balance = Users.deposit(user, amount, currency)
-    {:ok, new_balance}
+    Users.deposit(user, amount, currency)
   end
 
   def deposit(_, _, _) do
