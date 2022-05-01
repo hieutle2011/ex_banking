@@ -3,11 +3,12 @@ defmodule ExBanking do
   Documentation for `ExBanking`.
   """
 
-  alias ExBanking.User
+  alias ExBanking.Users
 
+  # todo user_already_exists
   @spec create_user(user :: String.t()) :: :ok | {:error, :wrong_arguments | :user_already_exists}
   def create_user(user) when is_binary(user) do
-    User.start_link(user)
+    Users.start_link(user)
     :ok
   end
 
@@ -18,9 +19,14 @@ defmodule ExBanking do
   @spec deposit(user :: String.t(), amount :: number, currency :: String.t()) ::
           {:ok, new_balance :: number}
           | {:error, :wrong_arguments | :user_does_not_exist | :too_many_requests_to_user}
-  def deposit(_user, _amount, _currency) do
-    new_balance = 0
+  def deposit(user, amount, currency)
+      when is_binary(user) and amount >= 0 and is_binary(currency) do
+    new_balance = Users.deposit(user, amount, currency)
     {:ok, new_balance}
+  end
+
+  def deposit(_, _, _) do
+    {:error, :wrong_arguments}
   end
 
   @spec withdraw(user :: String.t(), amount :: number, currency :: String.t()) ::
@@ -38,10 +44,11 @@ defmodule ExBanking do
   @spec get_balance(user :: String.t(), currency :: String.t()) ::
           {:ok, balance :: number}
           | {:error, :wrong_arguments | :user_does_not_exist | :too_many_requests_to_user}
-  def get_balance(_user, _currency) do
-    balance = 0
-    {:ok, balance}
+  def get_balance(user, currency) when is_binary(user) and is_binary(currency) do
+    Users.get_balance(user, currency)
   end
+
+  def get_balance(_, _), do: {:error, :wrong_arguments}
 
   @spec send(
           from_user :: String.t(),

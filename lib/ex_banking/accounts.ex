@@ -5,6 +5,20 @@ defmodule ExBanking.Accounts do
     %Account{currency: currency, balance: balance}
   end
 
+  def deposit(accounts, amount, currency) do
+    case get_account(accounts, currency) do
+      nil ->
+        new_accounts = [init(currency, amount) | accounts]
+        {amount, new_accounts}
+
+      %Account{balance: balance} = _account ->
+        new_balance = balance + amount
+        index = Enum.find_index(accounts, &(&1.currency == currency))
+        new_accounts = List.update_at(accounts, index, &%{&1 | balance: new_balance})
+        {new_balance, new_accounts}
+    end
+  end
+
   def get_balance(accounts, currency) when is_list(accounts) do
     case get_account(accounts, currency) do
       nil -> {:error, :currency_not_exist}
