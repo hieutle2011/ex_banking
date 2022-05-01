@@ -7,7 +7,11 @@ defmodule ExBanking.Application do
 
   @impl true
   def start(_type, _args) do
+    IO.puts("=======Starting app")
+
     children = [
+      # {Registry, keys: :unique, name: ExBanking.Registry},
+      {ExBanking.Pool, %{}}
       # Starts a worker by calling: ExBanking.Worker.start_link(arg)
       # {ExBanking.Worker, arg}
     ]
