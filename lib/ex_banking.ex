@@ -67,10 +67,8 @@ defmodule ExBanking do
              | :receiver_does_not_exist
              | :too_many_requests_to_sender
              | :too_many_requests_to_receiver}
-  def send(_from_user, _to_user, _amount, _currency) do
-    from_user_balance = 0
-    to_user_balance = 0
-    {:ok, from_user_balance, to_user_balance}
+  def send(from_user, to_user, amount, currency) do
+    Users.send(from_user, to_user, amount, currency)
   end
 
   @doc """
@@ -88,13 +86,14 @@ defmodule ExBanking do
 
   def wip do
     h1 = "h1"
+    h2 = "h2"
     usd = "usd"
-    vnd = "vnd"
     ExBanking.create_user(h1)
     ExBanking.get_balance(h1, usd)
     ExBanking.deposit(h1, 40, usd)
     ExBanking.get_balance(h1, usd)
 
     ExBanking.withdraw(h1, 10, usd)
+    ExBanking.create_user(h2)
   end
 end

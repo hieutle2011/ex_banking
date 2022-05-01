@@ -12,14 +12,37 @@ defmodule ExBanking.Users do
 
   def get_balance(username, currency) do
     GenServer.call(via(username), {:get_balance, currency})
+  catch
+    :exit, {:noproc, _} -> {:error, :user_does_not_exist}
   end
 
   def deposit(username, amount, currency) do
     GenServer.call(via(username), {:deposit, amount, currency})
+  catch
+    :exit, {:noproc, _} -> {:error, :user_does_not_exist}
   end
 
   def withdraw(username, amount, currency) do
     GenServer.call(via(username), {:withdraw, amount, currency})
+  catch
+    :exit, {:noproc, _} -> {:error, :user_does_not_exist}
+  end
+
+  def send(from_user, to_user, amount, currency) do
+    with {:sender, {:ok, from_user_balance}} <- {:sender, withdraw(from_user, amount, currency)},
+         {:receiver, {:ok, to_user_balance}} <- {:receiver, deposit(to_user, amount, currency)} do
+      {:ok, from_user_balance, to_user_balance}
+    else
+      {:sender, {:error, :user_does_not_exist}} ->
+        {:error, :sender_does_not_exist}
+
+      {:sender, {:error, error}} ->
+        {:error, error}
+
+      {:receiver, {:error, :user_does_not_exist}} ->
+        deposit(from_user, amount, currency)
+        {:error, :receiver_does_not_exist}
+    end
   end
 
   # # # # # # #
