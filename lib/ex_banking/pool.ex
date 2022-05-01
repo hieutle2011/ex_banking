@@ -1,10 +1,10 @@
 defmodule ExBanking.Pool do
-  use Agent
+  use GenServer
 
   @max_conn 5
   def start_link(initial_value \\ %{}) do
     IO.inspect(binding(), label: "Pool start link")
-    Agent.start_link(fn -> initial_value end, name: __MODULE__)
+    GenServer.start_link(__MODULE__, initial_value, name: __MODULE__)
   end
 
   def can_query?(key, role \\ "user") do
@@ -15,25 +15,49 @@ defmodule ExBanking.Pool do
   end
 
   def value(key) do
-    Agent.get(__MODULE__, & &1) |> Map.get(key, @max_conn)
+    GenServer.call(__MODULE__, {:value, key})
   end
 
   def decrement(key) do
-    Agent.update(__MODULE__, fn state ->
+    GenServer.cast(__MODULE__, {:decrement, key})
+  end
+
+  def increment(key) do
+    GenServer.cast(__MODULE__, {:increment, key})
+  end
+
+  @impl true
+  def init(init_arg) do
+    {:ok, init_arg}
+  end
+
+  @impl true
+  def handle_call({:value, key}, _from, state) do
+    value = Map.get(state, key, @max_conn)
+    new_state = Map.put(state, key, value)
+    {:reply, value, new_state}
+  end
+
+  @impl true
+  def handle_cast({:decrement, key}, state) do
+    new_state =
       Map.update(state, key, @max_conn - 1, fn
         conn when conn > 0 -> conn - 1
         conn -> conn
       end)
-    end)
+
+    {:noreply, new_state}
   end
 
-  def increment(key) do
-    Agent.update(__MODULE__, fn state ->
+  @impl true
+  def handle_cast({:increment, key}, state) do
+    new_state =
       Map.update(state, key, @max_conn, fn
         conn when conn < @max_conn -> conn + 1
         conn -> conn
       end)
-    end)
+
+    {:noreply, new_state}
   end
 
   defp err(user) do
