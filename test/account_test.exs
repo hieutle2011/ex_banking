@@ -1,23 +1,28 @@
-defmodule ExBanking.AccountTest do
+defmodule ExBanking.AccountsTest do
   use ExUnit.Case
+  alias ExBanking.Accounts
   alias ExBanking.Account
 
   test "get_balance" do
     accounts = init()
-    assert {:ok, 100} == Account.get_balance(accounts, "usd")
-    assert {:error, :currency_not_exist} == Account.get_balance(accounts, "vnd")
+    assert {:ok, 100} == Accounts.get_balance(accounts, "usd")
+    assert {:error, :currency_not_exist} == Accounts.get_balance(accounts, "vnd")
   end
 
   test "increase_balance" do
     accounts = init()
-    assert {:ok, 110} == Account.increase_balance(accounts, 10, "usd")
+    assert {:ok, 110} == Accounts.increase_balance(accounts, 10, "usd")
   end
 
   test "decrease_balance" do
     accounts = init()
-    assert {:ok, 90} == Account.decrease_balance(accounts, 10, "usd")
-    assert {:error, :not_enough_money} == Account.decrease_balance(accounts, 200, "usd")
+    assert {:ok, 90} == Accounts.decrease_balance(accounts, 10, "usd")
+    assert {:error, :not_enough_money} == Accounts.decrease_balance(accounts, 200, "usd")
   end
 
-  defp init, do: [%Account{currency: "usd", balance: 100}]
+  test "init" do
+    assert %Account{currency: "usd", balance: 100} = Accounts.init("usd", 100)
+  end
+
+  defp init, do: [Accounts.init("usd", 100)]
 end
