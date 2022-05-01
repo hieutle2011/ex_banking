@@ -19,6 +19,24 @@ defmodule ExBanking.Accounts do
     end
   end
 
+  def withdraw(accounts, amount, currency) do
+    case get_account(accounts, currency) do
+      nil ->
+        {:error, :not_enough_money}
+
+      %Account{balance: balance} = _account ->
+        new_balance = balance - amount
+
+        if new_balance >= 0 do
+          index = Enum.find_index(accounts, &(&1.currency == currency))
+          new_accounts = List.update_at(accounts, index, &%{&1 | balance: new_balance})
+          {:ok, new_balance, new_accounts}
+        else
+          {:error, :not_enough_money}
+        end
+    end
+  end
+
   def get_balance(accounts, currency) when is_list(accounts) do
     case get_account(accounts, currency) do
       nil -> {:error, :currency_not_exist}

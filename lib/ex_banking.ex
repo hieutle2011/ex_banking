@@ -36,9 +36,13 @@ defmodule ExBanking do
              | :user_does_not_exist
              | :not_enough_money
              | :too_many_requests_to_user}
-  def withdraw(_user, _amount, _currency) do
-    new_balance = 0
-    {:ok, new_balance}
+  def withdraw(user, amount, currency)
+      when is_binary(user) and amount >= 0 and is_binary(currency) do
+    Users.withdraw(user, amount, currency)
+  end
+
+  def withdraw(_, _, _) do
+    {:error, :wrong_arguments}
   end
 
   @spec get_balance(user :: String.t(), currency :: String.t()) ::
@@ -81,5 +85,17 @@ defmodule ExBanking do
   """
   def hello do
     :world
+  end
+
+  def wip do
+    h1 = "h1"
+    usd = "usd"
+    vnd = "vnd"
+    ExBanking.create_user(h1)
+    ExBanking.get_balance(h1, usd)
+    ExBanking.deposit(h1, 40, usd)
+    ExBanking.get_balance(h1, usd)
+
+    ExBanking.withdraw(h1, 10, usd)
   end
 end

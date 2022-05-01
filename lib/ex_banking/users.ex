@@ -14,6 +14,10 @@ defmodule ExBanking.Users do
     GenServer.call(via(username), {:deposit, amount, currency})
   end
 
+  def withdraw(username, amount, currency) do
+    GenServer.call(via(username), {:withdraw, amount, currency})
+  end
+
   @impl true
   def init(init_arg) do
     {:ok, init_arg}
@@ -25,9 +29,21 @@ defmodule ExBanking.Users do
     {:reply, balance, accounts}
   end
 
+  @impl true
   def handle_call({:deposit, amount, currency}, _from, accounts) do
     {new_balance, new_accounts} = Accounts.deposit(accounts, amount, currency)
     {:reply, new_balance, new_accounts}
+  end
+
+  @impl true
+  def handle_call({:withdraw, amount, currency}, _from, accounts) do
+    case Accounts.withdraw(accounts, amount, currency) do
+      {:ok, new_balance, new_accounts} ->
+        {:reply, {:ok, new_balance}, new_accounts}
+
+      {:error, error} ->
+        {:reply, {:error, error}, accounts}
+    end
   end
 
   # def whereis_name(username) do
