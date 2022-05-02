@@ -23,9 +23,7 @@ defmodule ExBanking do
     Users.deposit(user, amount, currency)
   end
 
-  def deposit(_, _, _) do
-    {:error, :wrong_arguments}
-  end
+  def deposit(_, _, _), do: {:error, :wrong_arguments}
 
   @spec withdraw(user :: String.t(), amount :: number, currency :: String.t()) ::
           {:ok, new_balance :: number}
@@ -39,9 +37,7 @@ defmodule ExBanking do
     Users.withdraw(user, amount, currency)
   end
 
-  def withdraw(_, _, _) do
-    {:error, :wrong_arguments}
-  end
+  def withdraw(_, _, _), do: {:error, :wrong_arguments}
 
   @spec get_balance(user :: String.t(), currency :: String.t()) ::
           {:ok, balance :: number}
@@ -73,19 +69,6 @@ defmodule ExBanking do
   end
 
   def send(_, _, _, _), do: {:error, :wrong_arguments}
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> ExBanking.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
 
   def wip do
     h1 = "h1"
