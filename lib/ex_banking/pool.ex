@@ -14,6 +14,20 @@ defmodule ExBanking.Pool do
     end
   end
 
+  def lock_user(username, {m, f, a}) do
+    with :ok <- can_query?(username),
+         :ok <- decrement(username),
+         {:ok, balance} <- apply(m, f, a),
+         :ok <- increment(username) do
+      {:ok, balance}
+    end
+  catch
+    :exit, {:noproc, _} ->
+      # todo
+      # drop(username)
+      {:error, :user_does_not_exist}
+  end
+
   def value(key) do
     GenServer.call(__MODULE__, {:value, key})
   end
@@ -34,6 +48,7 @@ defmodule ExBanking.Pool do
   @impl true
   def handle_call({:value, key}, _from, state) do
     value = Map.get(state, key, @max_conn)
+    # IO.inspect(value, label: "conn value:")
     new_state = Map.put(state, key, value)
     {:reply, value, new_state}
   end
@@ -46,6 +61,8 @@ defmodule ExBanking.Pool do
         conn -> conn
       end)
 
+    # IO.inspect(binding(), label: "decrement")
+
     {:noreply, new_state}
   end
 
@@ -56,6 +73,8 @@ defmodule ExBanking.Pool do
         conn when conn < @max_conn -> conn + 1
         conn -> conn
       end)
+
+    # IO.inspect(binding(), label: "increment")
 
     {:noreply, new_state}
   end

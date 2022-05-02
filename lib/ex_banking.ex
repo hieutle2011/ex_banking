@@ -80,4 +80,18 @@ defmodule ExBanking do
     ExBanking.withdraw(h1, 10, usd)
     ExBanking.create_user(h2)
   end
+
+  def test do
+    h1 = "h1"
+    # h2 = "h2"
+    usd = "usd"
+    ExBanking.create_user(h1)
+    ExBanking.deposit(h1, 40, usd)
+
+    for _ <- 0..10 do
+      :timer.sleep(:rand.uniform(10) * 50)
+      Task.async(fn -> ExBanking.get_balance(h1, usd) end)
+    end
+    |> Task.await_many()
+  end
 end

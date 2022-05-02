@@ -1,6 +1,7 @@
 defmodule ExBanking.Users do
   use GenServer
   alias ExBanking.Accounts
+  alias ExBanking.Pool
 
   # # # # # # # #
   #  Client API #
@@ -11,21 +12,18 @@ defmodule ExBanking.Users do
   end
 
   def get_balance(username, currency) do
-    GenServer.call(via(username), {:get_balance, currency})
-  catch
-    :exit, {:noproc, _} -> {:error, :user_does_not_exist}
+    mfa = {GenServer, :call, [via(username), {:get_balance, currency}]}
+    Pool.lock_user(username, mfa)
   end
 
   def deposit(username, amount, currency) do
-    GenServer.call(via(username), {:deposit, amount, currency})
-  catch
-    :exit, {:noproc, _} -> {:error, :user_does_not_exist}
+    mfa = {GenServer, :call, [via(username), {:deposit, amount, currency}]}
+    Pool.lock_user(username, mfa)
   end
 
   def withdraw(username, amount, currency) do
-    GenServer.call(via(username), {:withdraw, amount, currency})
-  catch
-    :exit, {:noproc, _} -> {:error, :user_does_not_exist}
+    mfa = {GenServer, :call, [via(username), {:withdraw, amount, currency}]}
+    Pool.lock_user(username, mfa)
   end
 
   def send(from_user, to_user, amount, currency) do
@@ -56,6 +54,7 @@ defmodule ExBanking.Users do
 
   @impl true
   def handle_call({:get_balance, currency}, _from, accounts) do
+    :timer.sleep(:rand.uniform(10) * 100)
     balance = Accounts.get_balance(accounts, currency)
     {:reply, balance, accounts}
   end
