@@ -5,21 +5,18 @@ defmodule ExBanking do
 
   alias ExBanking.Users
 
-  # todo user_already_exists
   @spec create_user(user :: String.t()) :: :ok | {:error, :wrong_arguments | :user_already_exists}
   def create_user(user) when is_binary(user) do
     Users.start_link(user)
   end
 
-  def create_user(_) do
-    {:error, :wrong_arguments}
-  end
+  def create_user(_), do: {:error, :wrong_arguments}
 
   @spec deposit(user :: String.t(), amount :: number, currency :: String.t()) ::
           {:ok, new_balance :: number}
           | {:error, :wrong_arguments | :user_does_not_exist | :too_many_requests_to_user}
   def deposit(user, amount, currency)
-      when is_binary(user) and amount >= 0 and is_binary(currency) do
+      when is_binary(user) and is_number(amount) and amount >= 0 and is_binary(currency) do
     Users.deposit(user, amount, currency)
   end
 
@@ -33,7 +30,7 @@ defmodule ExBanking do
              | :not_enough_money
              | :too_many_requests_to_user}
   def withdraw(user, amount, currency)
-      when is_binary(user) and amount >= 0 and is_binary(currency) do
+      when is_binary(user) and is_number(amount) and amount >= 0 and is_binary(currency) do
     Users.withdraw(user, amount, currency)
   end
 
