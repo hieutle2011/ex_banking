@@ -4,10 +4,11 @@ defmodule ExBanking do
   """
 
   alias ExBanking.Users
+  alias ExBanking.UsersSupervisor
 
   @spec create_user(user :: String.t()) :: :ok | {:error, :wrong_arguments | :user_already_exists}
   def create_user(user) when is_binary(user) do
-    Users.start_link(user)
+    UsersSupervisor.start_child(user)
   end
 
   def create_user(_), do: {:error, :wrong_arguments}

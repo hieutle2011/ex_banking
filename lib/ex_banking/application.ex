@@ -11,7 +11,8 @@ defmodule ExBanking.Application do
 
     children = [
       # {Registry, keys: :unique, name: ExBanking.Registry},
-      {ExBanking.Pool, %{}}
+      {ExBanking.Pool, %{}},
+      {ExBanking.UsersSupervisor, []}
       # Starts a worker by calling: ExBanking.Worker.start_link(arg)
       # {ExBanking.Worker, arg}
     ]
