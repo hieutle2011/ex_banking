@@ -6,7 +6,7 @@ defmodule ExBanking.AccountsTest do
   test "get_balance" do
     accounts = init()
     assert {:ok, 100} == Accounts.get_balance(accounts, "usd")
-    assert {:error, :currency_not_exist} == Accounts.get_balance(accounts, "vnd")
+    assert {:ok, 0} == Accounts.get_balance(accounts, "vnd")
   end
 
   test "increase_balance" do

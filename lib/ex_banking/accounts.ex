@@ -40,7 +40,7 @@ defmodule ExBanking.Accounts do
 
   def get_balance(accounts, currency) when is_list(accounts) do
     case get_account(accounts, currency) do
-      nil -> {:error, :currency_not_exist}
+      nil -> {:ok, 0}
       %Account{} = account -> {:ok, Map.get(account, :balance)}
     end
   end
