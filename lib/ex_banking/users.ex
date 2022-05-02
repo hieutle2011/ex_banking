@@ -7,7 +7,12 @@ defmodule ExBanking.Users do
   # # # # # # # #
 
   def start_link(username) do
-    GenServer.start_link(__MODULE__, [], name: via(username))
+    IO.puts("Starting user server for #{username}")
+
+    case GenServer.start_link(__MODULE__, [], name: via(username)) do
+      {:ok, _pid} -> :ok
+      {:error, {:already_started, _pid}} -> {:error, :user_already_exists}
+    end
   end
 
   def get_balance(username, currency) do
@@ -85,8 +90,12 @@ defmodule ExBanking.Users do
   #   Registry.whereis_name(via(username))
   # end
 
+  def whereis_name(username) do
+    ExBanking.Registry.whereis_name(via(username))
+  end
+
   def via(username) do
     String.to_atom(username)
-    # {:via, __MODULE__, username}
+    # {:via, __MODULE__, {ExBanking.Registry, username}}
   end
 end

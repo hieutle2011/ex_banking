@@ -9,7 +9,6 @@ defmodule ExBanking do
   @spec create_user(user :: String.t()) :: :ok | {:error, :wrong_arguments | :user_already_exists}
   def create_user(user) when is_binary(user) do
     Users.start_link(user)
-    :ok
   end
 
   def create_user(_) do
