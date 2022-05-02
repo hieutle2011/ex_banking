@@ -67,9 +67,13 @@ defmodule ExBanking do
              | :receiver_does_not_exist
              | :too_many_requests_to_sender
              | :too_many_requests_to_receiver}
-  def send(from_user, to_user, amount, currency) do
+  def send(from_user, to_user, amount, currency)
+      when is_binary(from_user) and is_binary(to_user) and is_number(amount) and
+             is_binary(currency) do
     Users.send(from_user, to_user, amount, currency)
   end
+
+  def send(_, _, _, _), do: {:error, :wrong_arguments}
 
   @doc """
   Hello world.
