@@ -1,4 +1,5 @@
 defmodule ExBanking.Pool do
+  @moduledoc false
   use GenServer
 
   @max_conn 5
@@ -8,7 +9,6 @@ defmodule ExBanking.Pool do
   # # # # # # # #
 
   def start_link(initial_value \\ %{}) do
-    IO.inspect(binding(), label: "Pool start link")
     GenServer.start_link(__MODULE__, initial_value, name: __MODULE__)
   end
 
@@ -74,7 +74,6 @@ defmodule ExBanking.Pool do
   @impl true
   def handle_call({:value, key}, _from, state) do
     value = Map.get(state, key, @max_conn)
-    IO.inspect(value, label: "conn value:")
     new_state = Map.put(state, key, value)
     {:reply, value, new_state}
   end
@@ -87,8 +86,6 @@ defmodule ExBanking.Pool do
         conn -> conn
       end)
 
-    IO.inspect(binding(), label: "decrement")
-
     {:noreply, new_state}
   end
 
@@ -99,8 +96,6 @@ defmodule ExBanking.Pool do
         conn when conn < @max_conn -> conn + 1
         conn -> conn
       end)
-
-    IO.inspect(binding(), label: "increment")
 
     {:noreply, new_state}
   end

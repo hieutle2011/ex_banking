@@ -1,4 +1,5 @@
 defmodule ExBanking.Users do
+  @moduledoc false
   use GenServer
   alias ExBanking.Accounts
   alias ExBanking.Pool

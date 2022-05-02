@@ -1,8 +1,8 @@
 defmodule ExBanking.UsersSupervisor do
+  @moduledoc false
   use DynamicSupervisor
 
   def start_link(init_arg) do
-    IO.puts("Starting user supervisor ...")
     DynamicSupervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
   end
 

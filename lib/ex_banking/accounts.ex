@@ -1,4 +1,5 @@
 defmodule ExBanking.Accounts do
+  @moduledoc false
   alias ExBanking.Account
 
   def init(currency, balance) do
@@ -56,6 +57,10 @@ defmodule ExBanking.Accounts do
       balance -> {:ok, balance}
     end
   end
+
+  # # # # # # #
+  #  Helpers  #
+  # # # # # # #
 
   defp get_account(accounts, currency) do
     Enum.find(accounts, &(&1.currency == currency))
