@@ -13,27 +13,26 @@ defmodule ExBanking.Users do
 
   def get_balance(username, currency) do
     mfa = {GenServer, :call, [via(username), {:get_balance, currency}]}
-    Pool.lock_user(username, mfa)
+    do_lock(username, mfa)
   end
 
   def deposit(username, amount, currency) do
     mfa = {GenServer, :call, [via(username), {:deposit, amount, currency}]}
-    Pool.lock_user(username, mfa)
+    do_lock(username, mfa)
   end
 
   def withdraw(username, amount, currency) do
     mfa = {GenServer, :call, [via(username), {:withdraw, amount, currency}]}
-    Pool.lock_user(username, mfa)
+    do_lock(username, mfa)
   end
 
   def send(from_user, to_user, amount, currency) do
-    mfa1 = {__MODULE__, :withdraw, [from_user, amount, currency]}
-    mfa2 = {__MODULE__, :deposit, [to_user, amount, currency]}
+    mfa1 = {GenServer, :call, [via(from_user), {:withdraw, amount, currency}]}
+    mfa2 = {GenServer, :call, [via(to_user), {:deposit, amount, currency}]}
+    # mfa1 = {__MODULE__, :withdraw, [from_user, amount, currency]}
+    # mfa2 = {__MODULE__, :deposit, [to_user, amount, currency]}
 
-    mfa3 = {__MODULE__, :deposit, [from_user, amount, currency]}
-    opts = [revert_sender_mfa: mfa3]
-
-    Pool.lock_users(from_user, to_user, mfa1, mfa2, opts)
+    do_locks(from_user, to_user, mfa1, mfa2)
   end
 
   # # # # # # #
@@ -73,8 +72,38 @@ defmodule ExBanking.Users do
   #  Helpers  #
   # # # # # # #
 
-  def via(username) do
+  defp via(username) do
     String.to_atom(username)
     # {:via, __MODULE__, {ExBanking.Registry, username}}
+  end
+
+  defp do_lock(username, mfa) do
+    case exists?(username) do
+      {:ok, _} -> Pool.lock_user(username, mfa)
+      {:error, error} -> {:error, error}
+    end
+  end
+
+  defp do_locks(from_user, to_user, mfa1, mfa2) do
+    with {:sender, {:ok, _}} <- {:sender, exists?(from_user)},
+         {:receiver, {:ok, _}} <- {:receiver, exists?(to_user)} do
+      Pool.lock_users(from_user, to_user, mfa1, mfa2)
+    else
+      {:sender, {:error, :user_does_not_exist}} -> err("sender")
+      {:receiver, {:error, :user_does_not_exist}} -> err("receiver")
+      any -> any
+    end
+  end
+
+  defp exists?(username) do
+    case Process.whereis(via(username)) do
+      nil -> {:error, :user_does_not_exist}
+      pid -> {:ok, pid}
+    end
+  end
+
+  defp err(role) do
+    error = String.to_atom("#{role}_does_not_exist")
+    {:error, error}
   end
 end

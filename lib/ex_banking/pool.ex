@@ -2,6 +2,11 @@ defmodule ExBanking.Pool do
   use GenServer
 
   @max_conn 5
+
+  # # # # # # # #
+  #  Client API #
+  # # # # # # # #
+
   def start_link(initial_value \\ %{}) do
     IO.inspect(binding(), label: "Pool start link")
     GenServer.start_link(__MODULE__, initial_value, name: __MODULE__)
@@ -21,43 +26,27 @@ defmodule ExBanking.Pool do
          :ok <- increment(username) do
       {:ok, balance}
     end
-  catch
-    :exit, {:noproc, _} ->
-      # todo
-      # drop(username)
-      {:error, :user_does_not_exist}
   end
 
-  def lock_users(from_user, to_user, {m1, f1, a1}, {m2, f2, a2}, opts) do
+  def lock_users(from_user, to_user, {m1, f1, a1}, {m2, f2, a2}) do
     with :ok <- can_query?(from_user, "sender"),
          :ok <- can_query?(to_user, "receiver"),
+         # sender
          :ok <- decrement(from_user),
-         :ok <- decrement(to_user),
          {:sender, {:ok, from_user_balance}} <- {:sender, apply(m1, f1, a1)},
-         {:receiver, {:ok, to_user_balance}} <- {:receiver, apply(m2, f2, a2)},
          :ok <- increment(from_user),
+         # receiver
+         :ok <- decrement(to_user),
+         {:receiver, {:ok, to_user_balance}} <- {:receiver, apply(m2, f2, a2)},
          :ok <- increment(to_user) do
       {:ok, from_user_balance, to_user_balance}
     else
-      {:sender, {:error, :user_does_not_exist}} ->
+      {:sender, {:error, :not_enough_money}} ->
         :ok = increment(from_user)
-        :ok = increment(to_user)
-        {:error, :sender_does_not_exist}
+        {:error, :not_enough_money}
 
-      {:sender, {:error, error}} ->
-        :ok = increment(from_user)
-        :ok = increment(to_user)
-        {:error, error}
-
-      {:receiver, {:error, :user_does_not_exist}} ->
-        {m, f, a} = Keyword.fetch!(opts, :revert_sender_mfa)
-        apply(m, f, a)
-        :ok = increment(from_user)
-        :ok = increment(to_user)
-        {:error, :receiver_does_not_exist}
-
-      {:error, error} ->
-        {:error, error}
+      any ->
+        any
     end
   end
 
@@ -72,6 +61,10 @@ defmodule ExBanking.Pool do
   def increment(key) do
     GenServer.cast(__MODULE__, {:increment, key})
   end
+
+  # # # # # # #
+  #  Callback #
+  # # # # # # #
 
   @impl true
   def init(init_arg) do
@@ -111,6 +104,10 @@ defmodule ExBanking.Pool do
 
     {:noreply, new_state}
   end
+
+  # # # # # # #
+  #  Helpers  #
+  # # # # # # #
 
   defp err(user) do
     error = String.to_atom("too_many_requests_to_#{user}")
