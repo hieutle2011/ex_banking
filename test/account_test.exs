@@ -16,12 +16,12 @@ defmodule ExBanking.AccountsTest do
 
   test "decrease_balance" do
     accounts = init()
-    assert {:ok, 90} == Accounts.decrease_balance(accounts, 10, "usd")
+    assert {:ok, 98.45} == Accounts.decrease_balance(accounts, 1.55, "usd")
     assert {:error, :not_enough_money} == Accounts.decrease_balance(accounts, 200, "usd")
   end
 
   test "init" do
-    assert %Account{currency: "usd", balance: 100} = Accounts.init("usd", 100)
+    assert %Account{currency: "usd", balance: 1.55} = Accounts.init("usd", 1.55)
   end
 
   defp init, do: [Accounts.init("usd", 100)]

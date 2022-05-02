@@ -12,7 +12,7 @@ defmodule ExBanking.Accounts do
         {amount, new_accounts}
 
       %Account{balance: balance} = _account ->
-        new_balance = balance + amount
+        new_balance = round_two(balance + amount)
         index = Enum.find_index(accounts, &(&1.currency == currency))
         new_accounts = List.update_at(accounts, index, &%{&1 | balance: new_balance})
         {new_balance, new_accounts}
@@ -25,7 +25,7 @@ defmodule ExBanking.Accounts do
         {:error, :not_enough_money}
 
       %Account{balance: balance} = _account ->
-        new_balance = balance - amount
+        new_balance = round_two(balance - amount)
 
         if new_balance >= 0 do
           index = Enum.find_index(accounts, &(&1.currency == currency))
@@ -65,4 +65,6 @@ defmodule ExBanking.Accounts do
       func.(balance, amount)
     end
   end
+
+  defp round_two(amount), do: Float.round(amount, 2)
 end
