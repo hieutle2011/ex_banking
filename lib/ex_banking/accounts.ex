@@ -8,11 +8,12 @@ defmodule ExBanking.Accounts do
   def deposit(accounts, amount, currency) do
     case get_account(accounts, currency) do
       nil ->
-        new_accounts = [init(currency, amount) | accounts]
-        {amount, new_accounts}
+        balance = float_round(amount)
+        new_accounts = [init(currency, balance) | accounts]
+        {balance, new_accounts}
 
       %Account{balance: balance} = _account ->
-        new_balance = round_two(balance + amount)
+        new_balance = float_round(balance + amount)
         index = Enum.find_index(accounts, &(&1.currency == currency))
         new_accounts = List.update_at(accounts, index, &%{&1 | balance: new_balance})
         {new_balance, new_accounts}
@@ -25,7 +26,7 @@ defmodule ExBanking.Accounts do
         {:error, :not_enough_money}
 
       %Account{balance: balance} = _account ->
-        new_balance = round_two(balance - amount)
+        new_balance = float_round(balance - amount)
 
         if new_balance >= 0 do
           index = Enum.find_index(accounts, &(&1.currency == currency))
@@ -66,5 +67,6 @@ defmodule ExBanking.Accounts do
     end
   end
 
-  defp round_two(amount), do: Float.round(amount, 2)
+  defp float_round(amount) when is_integer(amount), do: float_round(1.0 * amount)
+  defp float_round(amount) when is_float(amount), do: Float.round(amount, 2)
 end
