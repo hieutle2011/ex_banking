@@ -28,7 +28,7 @@ defmodule ExBanking.Pool do
       {:error, :user_does_not_exist}
   end
 
-  def lock_users(from_user, to_user, {m1, f1, a1}, {m2, f2, a2}) do
+  def lock_users(from_user, to_user, {m1, f1, a1}, {m2, f2, a2}, opts) do
     with :ok <- can_query?(from_user, "sender"),
          :ok <- can_query?(to_user, "receiver"),
          :ok <- decrement(from_user),
@@ -38,6 +38,26 @@ defmodule ExBanking.Pool do
          :ok <- increment(from_user),
          :ok <- increment(to_user) do
       {:ok, from_user_balance, to_user_balance}
+    else
+      {:sender, {:error, :user_does_not_exist}} ->
+        :ok = increment(from_user)
+        :ok = increment(to_user)
+        {:error, :sender_does_not_exist}
+
+      {:sender, {:error, error}} ->
+        :ok = increment(from_user)
+        :ok = increment(to_user)
+        {:error, error}
+
+      {:receiver, {:error, :user_does_not_exist}} ->
+        {m, f, a} = Keyword.fetch!(opts, :revert_sender_mfa)
+        apply(m, f, a)
+        :ok = increment(from_user)
+        :ok = increment(to_user)
+        {:error, :receiver_does_not_exist}
+
+      {:error, error} ->
+        {:error, error}
     end
   end
 

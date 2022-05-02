@@ -30,23 +30,10 @@ defmodule ExBanking.Users do
     mfa1 = {__MODULE__, :withdraw, [from_user, amount, currency]}
     mfa2 = {__MODULE__, :deposit, [to_user, amount, currency]}
 
-    case Pool.lock_users(from_user, to_user, mfa1, mfa2) do
-      {:ok, from_user_balance, to_user_balance} ->
-        {:ok, from_user_balance, to_user_balance}
+    mfa3 = {__MODULE__, :deposit, [from_user, amount, currency]}
+    opts = [revert_sender_mfa: mfa3]
 
-      {:sender, {:error, :user_does_not_exist}} ->
-        {:error, :sender_does_not_exist}
-
-      {:sender, {:error, error}} ->
-        {:error, error}
-
-      {:receiver, {:error, :user_does_not_exist}} ->
-        deposit(from_user, amount, currency)
-        {:error, :receiver_does_not_exist}
-
-      {:error, error} ->
-        {:error, error}
-    end
+    Pool.lock_users(from_user, to_user, mfa1, mfa2, opts)
   end
 
   # # # # # # #
