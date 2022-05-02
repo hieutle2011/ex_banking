@@ -27,10 +27,13 @@ defmodule ExBanking.Users do
   end
 
   def send(from_user, to_user, amount, currency) do
-    with {:sender, {:ok, from_user_balance}} <- {:sender, withdraw(from_user, amount, currency)},
-         {:receiver, {:ok, to_user_balance}} <- {:receiver, deposit(to_user, amount, currency)} do
-      {:ok, from_user_balance, to_user_balance}
-    else
+    mfa1 = {__MODULE__, :withdraw, [from_user, amount, currency]}
+    mfa2 = {__MODULE__, :deposit, [to_user, amount, currency]}
+
+    case Pool.lock_users(from_user, to_user, mfa1, mfa2) do
+      {:ok, from_user_balance, to_user_balance} ->
+        {:ok, from_user_balance, to_user_balance}
+
       {:sender, {:error, :user_does_not_exist}} ->
         {:error, :sender_does_not_exist}
 
@@ -40,6 +43,9 @@ defmodule ExBanking.Users do
       {:receiver, {:error, :user_does_not_exist}} ->
         deposit(from_user, amount, currency)
         {:error, :receiver_does_not_exist}
+
+      {:error, error} ->
+        {:error, error}
     end
   end
 

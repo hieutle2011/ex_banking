@@ -28,6 +28,19 @@ defmodule ExBanking.Pool do
       {:error, :user_does_not_exist}
   end
 
+  def lock_users(from_user, to_user, {m1, f1, a1}, {m2, f2, a2}) do
+    with :ok <- can_query?(from_user, "sender"),
+         :ok <- can_query?(to_user, "receiver"),
+         :ok <- decrement(from_user),
+         :ok <- decrement(to_user),
+         {:sender, {:ok, from_user_balance}} <- {:sender, apply(m1, f1, a1)},
+         {:receiver, {:ok, to_user_balance}} <- {:receiver, apply(m2, f2, a2)},
+         :ok <- increment(from_user),
+         :ok <- increment(to_user) do
+      {:ok, from_user_balance, to_user_balance}
+    end
+  end
+
   def value(key) do
     GenServer.call(__MODULE__, {:value, key})
   end
@@ -48,7 +61,7 @@ defmodule ExBanking.Pool do
   @impl true
   def handle_call({:value, key}, _from, state) do
     value = Map.get(state, key, @max_conn)
-    # IO.inspect(value, label: "conn value:")
+    IO.inspect(value, label: "conn value:")
     new_state = Map.put(state, key, value)
     {:reply, value, new_state}
   end
@@ -61,7 +74,7 @@ defmodule ExBanking.Pool do
         conn -> conn
       end)
 
-    # IO.inspect(binding(), label: "decrement")
+    IO.inspect(binding(), label: "decrement")
 
     {:noreply, new_state}
   end
@@ -74,7 +87,7 @@ defmodule ExBanking.Pool do
         conn -> conn
       end)
 
-    # IO.inspect(binding(), label: "increment")
+    IO.inspect(binding(), label: "increment")
 
     {:noreply, new_state}
   end
