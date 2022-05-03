@@ -52,30 +52,12 @@ defmodule ExBanking.Accounts do
     end
   end
 
-  def increase_balance(accounts, amount, currency) do
-    balance = mutate_balance(accounts, amount, currency, &Kernel.+/2)
-    {:ok, balance}
-  end
-
-  def decrease_balance(accounts, amount, currency) do
-    case mutate_balance(accounts, amount, currency, &Kernel.-/2) do
-      balance when balance < 0 -> {:error, :not_enough_money}
-      balance -> {:ok, balance}
-    end
-  end
-
   # # # # # # #
   #  Helpers  #
   # # # # # # #
 
   defp get_account(accounts, currency) do
     Enum.find(accounts, &(&1.currency == currency))
-  end
-
-  defp mutate_balance(accounts, amount, currency, func) do
-    with {:ok, balance} <- get_balance(accounts, currency) do
-      func.(balance, amount)
-    end
   end
 
   defp float_round(amount) when is_integer(amount), do: float_round(1.0 * amount)
