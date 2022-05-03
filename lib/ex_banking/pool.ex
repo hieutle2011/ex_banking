@@ -105,7 +105,7 @@ defmodule ExBanking.Pool do
   # # # # # # #
 
   defp max_conn do
-    if Mix.env() == :test, do: 3, else: 10
+    if Mix.env() == :test, do: 2, else: 10
   end
 
   defp err(user) do

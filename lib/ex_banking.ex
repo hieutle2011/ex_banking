@@ -17,7 +17,7 @@ defmodule ExBanking do
           {:ok, new_balance :: number}
           | {:error, :wrong_arguments | :user_does_not_exist | :too_many_requests_to_user}
   def deposit(user, amount, currency)
-      when is_binary(user) and is_number(amount) and amount >= 0 and is_binary(currency) do
+      when is_binary(user) and is_number(amount) and amount > 0 and is_binary(currency) do
     Users.deposit(user, amount, currency)
   end
 
@@ -31,7 +31,7 @@ defmodule ExBanking do
              | :not_enough_money
              | :too_many_requests_to_user}
   def withdraw(user, amount, currency)
-      when is_binary(user) and is_number(amount) and amount >= 0 and is_binary(currency) do
+      when is_binary(user) and is_number(amount) and amount > 0 and is_binary(currency) do
     Users.withdraw(user, amount, currency)
   end
 
@@ -61,7 +61,7 @@ defmodule ExBanking do
              | :too_many_requests_to_sender
              | :too_many_requests_to_receiver}
   def send(from_user, to_user, amount, currency)
-      when is_binary(from_user) and is_binary(to_user) and is_number(amount) and
+      when is_binary(from_user) and is_binary(to_user) and is_number(amount) and amount > 0 and
              is_binary(currency) do
     Users.send(from_user, to_user, amount, currency)
   end
