@@ -2,7 +2,7 @@ defmodule ExBanking.Pool do
   @moduledoc false
   use GenServer
 
-  @max_conn 5
+  @max_conn 1
 
   # # # # # # # #
   #  Client API #
@@ -14,12 +14,18 @@ defmodule ExBanking.Pool do
 
   def can_query?(key, role \\ "user") do
     case value(key) do
-      conn when conn > 0 -> :ok
-      _ -> err(role)
+      conn when conn > 0 ->
+        IO.inspect(conn, label: "===conn")
+        :ok
+
+      _ ->
+        err(role)
     end
   end
 
   def lock_user(username, {m, f, a}) do
+    IO.puts("====call pool.lock_user")
+
     with :ok <- can_query?(username),
          :ok <- decrement(username),
          {:ok, balance} <- apply(m, f, a),
@@ -86,6 +92,7 @@ defmodule ExBanking.Pool do
         conn -> conn
       end)
 
+    IO.inspect(binding(), label: "===cast decrement")
     {:noreply, new_state}
   end
 
@@ -97,6 +104,7 @@ defmodule ExBanking.Pool do
         conn -> conn
       end)
 
+    IO.inspect(binding(), label: "===cast increment")
     {:noreply, new_state}
   end
 

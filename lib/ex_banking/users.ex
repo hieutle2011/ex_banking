@@ -18,6 +18,7 @@ defmodule ExBanking.Users do
   end
 
   def deposit(username, amount, currency) do
+    :timer.sleep(:rand.uniform(10) * 1000)
     mfa = {GenServer, :call, [via(username), {:deposit, amount, currency}]}
     do_lock(username, mfa)
   end
@@ -79,6 +80,7 @@ defmodule ExBanking.Users do
   end
 
   defp do_lock(username, mfa) do
+    IO.puts "====call do_lock"
     case exists?(username) do
       {:ok, _} -> Pool.lock_user(username, mfa)
       {:error, error} -> {:error, error}
