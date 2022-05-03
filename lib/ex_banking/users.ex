@@ -13,26 +13,23 @@ defmodule ExBanking.Users do
   end
 
   def get_balance(username, currency) do
-    mfa = {GenServer, :call, [via(username), {:get_balance, currency}]}
+    mfa = {GenServer, :call, [via(username), {:get_balance, currency}, timeout()]}
     do_lock(username, mfa)
   end
 
   def deposit(username, amount, currency) do
-    :timer.sleep(:rand.uniform(10) * 1000)
-    mfa = {GenServer, :call, [via(username), {:deposit, amount, currency}]}
+    mfa = {GenServer, :call, [via(username), {:deposit, amount, currency}, timeout()]}
     do_lock(username, mfa)
   end
 
   def withdraw(username, amount, currency) do
-    mfa = {GenServer, :call, [via(username), {:withdraw, amount, currency}]}
+    mfa = {GenServer, :call, [via(username), {:withdraw, amount, currency}, timeout()]}
     do_lock(username, mfa)
   end
 
   def send(from_user, to_user, amount, currency) do
-    mfa1 = {GenServer, :call, [via(from_user), {:withdraw, amount, currency}]}
-    mfa2 = {GenServer, :call, [via(to_user), {:deposit, amount, currency}]}
-    # mfa1 = {__MODULE__, :withdraw, [from_user, amount, currency]}
-    # mfa2 = {__MODULE__, :deposit, [to_user, amount, currency]}
+    mfa1 = {GenServer, :call, [via(from_user), {:withdraw, amount, currency}, timeout()]}
+    mfa2 = {GenServer, :call, [via(to_user), {:deposit, amount, currency}, timeout()]}
 
     do_locks(from_user, to_user, mfa1, mfa2)
   end
@@ -48,7 +45,6 @@ defmodule ExBanking.Users do
 
   @impl true
   def handle_call({:get_balance, currency}, _from, accounts) do
-    :timer.sleep(:rand.uniform(10) * 100)
     balance = Accounts.get_balance(accounts, currency)
     {:reply, balance, accounts}
   end
@@ -80,7 +76,6 @@ defmodule ExBanking.Users do
   end
 
   defp do_lock(username, mfa) do
-    IO.puts "====call do_lock"
     case exists?(username) do
       {:ok, _} -> Pool.lock_user(username, mfa)
       {:error, error} -> {:error, error}
@@ -103,6 +98,12 @@ defmodule ExBanking.Users do
       nil -> {:error, :user_does_not_exist}
       pid -> {:ok, pid}
     end
+  end
+
+  defp timeout do
+    if Mix.env() == :test,
+      do: 10_000,
+      else: 5_000
   end
 
   defp err(role) do

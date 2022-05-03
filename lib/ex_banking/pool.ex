@@ -2,8 +2,6 @@ defmodule ExBanking.Pool do
   @moduledoc false
   use GenServer
 
-  @max_conn 1
-
   # # # # # # # #
   #  Client API #
   # # # # # # # #
@@ -14,18 +12,12 @@ defmodule ExBanking.Pool do
 
   def can_query?(key, role \\ "user") do
     case value(key) do
-      conn when conn > 0 ->
-        IO.inspect(conn, label: "===conn")
-        :ok
-
-      _ ->
-        err(role)
+      conn when conn > 0 -> :ok
+      _ -> err(role)
     end
   end
 
   def lock_user(username, {m, f, a}) do
-    IO.puts("====call pool.lock_user")
-
     with :ok <- can_query?(username),
          :ok <- decrement(username),
          {:ok, balance} <- apply(m, f, a),
@@ -79,7 +71,7 @@ defmodule ExBanking.Pool do
 
   @impl true
   def handle_call({:value, key}, _from, state) do
-    value = Map.get(state, key, @max_conn)
+    value = Map.get(state, key, max_conn())
     new_state = Map.put(state, key, value)
     {:reply, value, new_state}
   end
@@ -87,30 +79,34 @@ defmodule ExBanking.Pool do
   @impl true
   def handle_cast({:decrement, key}, state) do
     new_state =
-      Map.update(state, key, @max_conn - 1, fn
+      Map.update(state, key, max_conn() - 1, fn
         conn when conn > 0 -> conn - 1
         conn -> conn
       end)
 
-    IO.inspect(binding(), label: "===cast decrement")
     {:noreply, new_state}
   end
 
   @impl true
   def handle_cast({:increment, key}, state) do
+    max_conn = max_conn()
+
     new_state =
-      Map.update(state, key, @max_conn, fn
-        conn when conn < @max_conn -> conn + 1
+      Map.update(state, key, max_conn, fn
+        conn when conn < max_conn -> conn + 1
         conn -> conn
       end)
 
-    IO.inspect(binding(), label: "===cast increment")
     {:noreply, new_state}
   end
 
   # # # # # # #
   #  Helpers  #
   # # # # # # #
+
+  defp max_conn do
+    if Mix.env() == :test, do: 3, else: 10
+  end
 
   defp err(user) do
     error = String.to_atom("too_many_requests_to_#{user}")

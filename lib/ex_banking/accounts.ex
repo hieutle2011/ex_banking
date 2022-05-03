@@ -7,6 +7,8 @@ defmodule ExBanking.Accounts do
   end
 
   def deposit(accounts, amount, currency) do
+    if Mix.env() == :test, do: :timer.sleep(:rand.uniform(10) * 100)
+
     case get_account(accounts, currency) do
       nil ->
         balance = float_round(amount)
@@ -22,6 +24,8 @@ defmodule ExBanking.Accounts do
   end
 
   def withdraw(accounts, amount, currency) do
+    if Mix.env() == :test, do: :timer.sleep(:rand.uniform(10) * 100)
+
     case get_account(accounts, currency) do
       nil ->
         {:error, :not_enough_money}
@@ -40,6 +44,8 @@ defmodule ExBanking.Accounts do
   end
 
   def get_balance(accounts, currency) when is_list(accounts) do
+    if Mix.env() == :test, do: :timer.sleep(:rand.uniform(10) * 100)
+
     case get_account(accounts, currency) do
       nil -> {:ok, 0}
       %Account{} = account -> {:ok, Map.get(account, :balance)}

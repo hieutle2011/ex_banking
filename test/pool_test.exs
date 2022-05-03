@@ -6,16 +6,16 @@ defmodule ExBanking.PoolTest do
 
   test ":ok" do
     Pool.start_link()
-    assert Pool.value(@user) == 10
+    assert Pool.value(@user) == 3
     assert :ok = Pool.can_query?(@user)
 
     assert :ok = Pool.decrement(@user)
-    assert Pool.value(@user) == 9
+    assert Pool.value(@user) == 2
 
     assert :ok = Pool.decrement(@user)
-    assert Pool.value(@user) == 8
+    assert Pool.value(@user) == 1
 
     assert :ok = Pool.increment(@user)
-    assert Pool.value(@user) == 9
+    assert Pool.value(@user) == 2
   end
 end
