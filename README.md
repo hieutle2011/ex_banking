@@ -1,21 +1,26 @@
 # ExBanking
 
-**TODO: Add description**
+My code for test task with Balanced.io
 
-## Installation
+## Run test
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `ex_banking` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:ex_banking, "~> 0.1.0"}
-  ]
-end
+```
+> mix deps.get
+> mix test
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/ex_banking](https://hexdocs.pm/ex_banking).
+## Architecture
 
+1. Each user is dynamically created and supervised by UsersSupervisor.
+2. Each user is in a seperated genserver process, therefore request for user A will not affect performance of requests for user B.
+3. A Pool server will keep track of connection value for each user.
+4. Use elixir native libraries only without any external ones (only for test and code quality).
+5. Not use any database / disc storage.
+
+## To do
+
+Things are not in requirements but would be better in real use case:
+
+1. Transaction history might be stored for report/audit purpose.
+2. Better use [Registry](https://hexdocs.pm/elixir/Registry.html) to name user process, instead of atom.
+3. Handle user process in case of failure if any.
